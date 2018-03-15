@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -25,9 +26,26 @@ type proxy struct {
 	Path   string
 }
 
+func (p proxy) String() string {
+	if p.Proto == "" {
+		p.Proto = "http"
+	}
+	if p.Port == 0 {
+		p.Port = 80
+	}
+	if p.Path == "" {
+		p.Path = "/"
+	}
+	if p.Path[0] != '/' {
+		p.Path = "/" + p.Path
+	}
+	return fmt.Sprintf("%s://%s:%d%s", p.Proto, p.Domain, p.Port, p.Path)
+}
+
 type service struct {
 	Name   string            `json:"-"`
-	Mellon map[string]string // TODO
+	Data   map[string]string // Free data
+	Mellon map[string]string
 	Server server
 	Proxy  map[string]proxy
 	Public []string
@@ -47,19 +65,6 @@ func process(c confmap) ([]service, error) {
 		// Split first domain and others as ServerName and ServerAlias
 		s.Server.Name = s.Server.Domains[0]
 		s.Server.Aliases = s.Server.Domains[1:]
-		// defaults for proxy
-		for pk, p := range s.Proxy {
-			if p.Proto == "" {
-				p.Proto = "http"
-			}
-			if p.Port == 0 {
-				p.Port = 80
-			}
-			if p.Path == "" {
-				p.Path = "/"
-			}
-			s.Proxy[pk] = p
-		}
 		// Make service name available
 		s.Name = k
 		srvs[i] = s

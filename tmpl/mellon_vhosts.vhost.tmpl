@@ -18,8 +18,8 @@
 	ProxyPass /sso/saml  "!"
 	ProxyPreserveHost On
 	{{range $k, $v:= .Proxy -}}
-	ProxyPass        {{$k}} {{$v.Proto}}://{{$v.Domain}}:{{$v.Port}}{{$v.Path}}
-	ProxyPassReverse {{$k}} {{$v.Proto}}://{{$v.Domain}}:{{$v.Port}}{{$v.Path}}
+	ProxyPass        {{$k}} {{$v}}
+	ProxyPassReverse {{$k}} {{$v}}
 	{{- end}}
 
 	<Location />
