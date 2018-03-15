@@ -1,0 +1,25 @@
+{
+	"Service1": {
+		"Mellon": {
+			"SPentityId": "MELLONID"
+		},
+		"Server": {
+			"Domains": [
+				"main.domain.local",
+				"another.domain.local"
+			],
+			"Port": 8080
+		},
+		"Proxy": {
+			"/frontendPath": {
+				# "Proto": "http",				# Default
+				# "Port": 80,					# Default
+				# "Path": "/"					# Default
+				"Domain": "my.domain.local"
+			}
+		},
+		"Public": [
+			"/assets"
+		]
+	}
+}

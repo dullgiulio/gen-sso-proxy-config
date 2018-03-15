@@ -1,0 +1,55 @@
+{{$stage := (.Env.Get "STAGE" "test")}}
+{{range .Services}}
+# Configuration for {{.Name}}
+<VirtualHost *:{{.Server.Port}}>
+	UseCanonicalName on
+
+	ServerName {{.Server.Name}}
+	{{range .Server.Aliases -}}
+	ServerAlias {{.}} 
+	{{- end}}
+
+	ErrorLog /dev/stderr
+	TransferLog /dev/stdout
+	LogLevel {{$.Env.Get "LOGLEVEL" "warn"}}
+
+	SSLProxyEngine On
+	
+	ProxyPass /sso/saml  "!"
+	ProxyPreserveHost On
+	{{range $k, $v:= .Proxy -}}
+	ProxyPass        {{$k}} {{$v.Proto}}://{{$v.Domain}}:{{$v.Port}}{{$v.Path}}
+	ProxyPassReverse {{$k}} {{$v.Proto}}://{{$v.Domain}}:{{$v.Port}}{{$v.Path}}
+	{{- end}}
+
+	<Location />
+		MellonEnable "auth"
+		MellonSecureCookie On
+		MellonMergeEnvVars On
+		MellonCookieDomain {{.Server.Name}}
+		MellonCookiePath "/"
+		MellonEndpointPath "/sso/saml"
+		MellonDefaultLoginPath "/"
+		MellonNoCookieErrorPage "/static/no_cookies.html"
+		MellonSPentityId {{.Mellon.SPentityId}}
+		MellonSPPrivateKeyFile /etc/httpd/saml/{{$stage}}/{{.Mellon.SPentityId}}/saml.key
+		MellonSPCertFile /etc/httpd/saml/{{$stage}}/{{.Mellon.SPentityId}}/saml.cert
+		MellonSPMetadataFile /etc/httpd/saml/{{$stage}}/{{.Mellon.SPentityId}}/sp-metadata.xml
+		MellonIdPMetadataFile /etc/httpd/saml/{{$stage}}/{{.Mellon.SPentityId}}/idp-metadata.xml
+		MellonAuthnContextClassRef "urn:federation:authentication:windows"
+		MellonAuthnContextClassRef "urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport"
+
+		Require all granted
+	</Location>
+
+	<Location /static>
+		MellonEnable "off"
+	</Location>
+
+	{{range .Public -}}
+	<Location {{.}}>
+		MellonEnable "off"
+	</Location>
+	{{- end}}
+</VirtualHost>
+{{end}}
